@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enregistrement - Bibliothèque</title>
+  <!-- AdminLTE CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+  <!-- FontAwesome (pour les icônes) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+  <!-- Navbar -->
+  <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+      </li>
+      <li class="nav-item d-none d-sm-inline-block">
+        <span id="welcome-message">Bienvenue, </span>
+      </li>
+      <li class="nav-item d-none d-sm-inline-block">
+        <a href="login.html" class="nav-link">Connexion</a>
+      </li>
+    </ul>
+  </nav>
+  <!-- /.navbar -->
+
+  <!-- Main Sidebar Container -->
+  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <a href="index.html" class="brand-link">
+      <span class="brand-text font-weight-light">Gestion Bibliothèque</span>
+    </a>
+    <div class="sidebar">
+      <nav>
+        <ul class="nav nav-pills nav-sidebar flex-column" role="menu">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link">
+              <i class="nav-icon fas fa-th"></i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gestion_livres.html" class="nav-link">
+              <i class="nav-icon fas fa-book"></i>
+              <p>Gérer Livres</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gestion_utilisateurs.html" class="nav-link">
+              <i class="nav-icon fas fa-users"></i>
+              <p>Gestion des Lecteurs</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="ajouter_livre.html" class="nav-link">
+              <i class="nav-icon fas fa-plus"></i>
+              <p>Ajouter Livre</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-cogs"></i>
+              <p>Paramètres</p>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Content Wrapper -->
+  <div class="content-wrapper">
+    <!-- Content Header -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <h1>Enregistrement</h1>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Formulaire d'Enregistrement</h3>
+              </div>
+              <div class="card-body">
+                <form id="registerForm">
+                  <div class="form-group">
+                    <label for="nom">Nom</label>
+                    <input type="text" class="form-control" id="nom" placeholder="Entrez votre nom">
+                  </div>
+                  <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" placeholder="Entrez votre email">
+                  </div>
+                  <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" class="form-control" id="password" placeholder="Entrez votre mot de passe">
+                  </div>
+                  <button type="button" class="btn btn-primary" id="registerBtn">S'enregistrer</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+</div>
+<!-- AdminLTE JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js";
+
+  // Votre configuration Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyB2_ndkdSpYtcnufPAiGPYKCj31syvAhgM",
+    authDomain: "app-mem-d5276.firebaseapp.com",
+    projectId: "app-mem-d5276",
+    storageBucket: "app-mem-d5276.firebasestorage.app",
+    messagingSenderId: "883425492672",
+    appId: "1:883425492672:web:44ed4f5dbae1aa19aa3725",
+    measurementId: "G-QVY3E7LDVQ"
+  };
+
+  // Initialisation de l'application Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Fonction pour enregistrer un nouvel utilisateur
+  document.getElementById("registerBtn")?.addEventListener("click", async function() {
+    const nom = document.getElementById("nom").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    if (!nom || !email || !password) {
+      alert("Veuillez remplir tous les champs.");
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Créer un document dans la collection "bibliothecaire"
+      await setDoc(doc(db, "bibliothecaire", user.uid), {
+        email: user.email,
+        uid: user.uid,
+        nom: nom
+      });
+
+      alert("Utilisateur enregistré avec succès!");
+      document.getElementById("registerForm").reset();
+      window.location.href = "login.html";
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement de l'utilisateur:", error);
+      alert("Erreur lors de l'enregistrement de l'utilisateur: " + error.message);
+    }
+  });
+</script>
+</body>
+</html>

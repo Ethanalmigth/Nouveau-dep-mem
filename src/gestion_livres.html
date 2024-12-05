@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gérer Livres - Bibliothèque</title>
+  <!-- AdminLTE CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+  <!-- FontAwesome (pour les icônes) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+  <!-- Navbar -->
+  <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+      </li>
+      <li class="nav-item d-none d-sm-inline-block">
+        <span id="welcome-message">Bienvenue, </span>
+      </li>
+      <li class="nav-item d-none d-sm-inline-block">
+        <a href="ajouter_livre.html" class="nav-link">Ajouter Livre</a>
+      </li>
+      <li class="nav-item d-none d-sm-inline-block">
+        <a href="gestion_utilisateurs.html" class="nav-link">Gestion des Lecteurs</a>
+      </li>
+    </ul>
+  </nav>
+  <!-- /.navbar -->
+
+  <!-- Main Sidebar Container -->
+  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <a href="index.html" class="brand-link">
+      <span class="brand-text font-weight-light">Gestion Bibliothèque</span>
+    </a>
+    <div class="sidebar">
+      <nav>
+        <ul class="nav nav-pills nav-sidebar flex-column" role="menu">
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link">
+              <i class="nav-icon fas fa-th"></i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gestion_livres.html" class="nav-link active">
+              <i class="nav-icon fas fa-book"></i>
+              <p>Gérer Livres</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="gestion_utilisateurs.html" class="nav-link">
+              <i class="nav-icon fas fa-users"></i>
+              <p>Gestion des Lecteurs</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="ajouter_livre.html" class="nav-link">
+              <i class="nav-icon fas fa-plus"></i>
+              <p>Ajouter Livre</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-cogs"></i>
+              <p>Paramètres</p>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Content Wrapper -->
+  <div class="content-wrapper">
+    <!-- Content Header -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <h1>Gérer Livres</h1>
+        <a href="ajouter_livre.html" class="btn btn-primary">Ajouter un Livre</a>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Liste des Livres</h3>
+              </div>
+              <div class="card-body">
+                <table class="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Titre</th>
+                      <th>Auteur</th>
+                      <th>Genre</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bookList">
+                    <!-- Les livres seront listés ici -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+</div>
+<!-- AdminLTE JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
+  import { getFirestore, collection, getDocs, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js";
+
+  // Votre configuration Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyB2_ndkdSpYtcnufPAiGPYKCj31syvAhgM",
+    authDomain: "app-mem-d5276.firebaseapp.com",
+    projectId: "app-mem-d5276",
+    storageBucket: "app-mem-d5276.firebasestorage.app",
+    messagingSenderId: "883425492672",
+    appId: "1:883425492672:web:44ed4f5dbae1aa19aa3725",
+    measurementId: "G-QVY3E7LDVQ"
+  };
+
+  // Initialisation de l'application Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Fonction pour récupérer et afficher les livres de Firestore
+  async function fetchBooks() {
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Veuillez vous connecter pour voir vos livres.");
+      return;
+    }
+
+    const q = query(collection(db, "Books"), where("id_bibliothecaire", "==", `/bibliothecaire/${user.uid}`));
+    const querySnapshot = await getDocs(q);
+    const bookList = document.getElementById("bookList");
+    bookList.innerHTML = ""; // Effacer les lignes existantes
+    querySnapshot.forEach((doc) => {
+      const bookData = doc.data();
+      const newRow = bookList.insertRow();
+      newRow.insertCell(0).innerText = bookData.Titre;
+      newRow.insertCell(1).innerText = bookData.Auteur;
+      newRow.insertCell(2).innerText = bookData.Genre;
+      newRow.insertCell(3).innerHTML = `<button class="btn btn-danger" onclick="removeBook('${doc.id}')">Supprimer</button>`;
+    });
+  }
+
+  // Fonction pour supprimer un livre de Firestore
+  window.removeBook = async function(bookId) {
+    await deleteDoc(doc(db, "Books", bookId));
+    fetchBooks(); // Rafraîchir la liste des livres
+  }
+
+  // Appel initial pour récupérer les livres
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      fetchBooks();
+    } else {
+      alert("Veuillez vous connecter pour voir vos livres.");
+      window.location.href = "login.html";
+    }
+  });
+</script>
+</body>
+</html>
